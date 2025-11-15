@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f4f4f4;
@@ -184,7 +185,7 @@
         <div class="border-t-2 border-hawk-black mt-4"></div>
     </header>
 
-    <div class="section-bubble executive-bubble animate-scroll-reveal" data-has-counters="true">
+    <div id="executive-summary" class="section-bubble executive-bubble animate-scroll-reveal" data-has-counters="true">
         <h3 class="text-xl font-bold hawk-black section-header">EXECUTIVE SUMMARY</h3>
         <p class="text-gray-700 mt-2">
             The Hawks 11U Fall 2025 season demonstrated <strong class="gain-green">significant improvement in plate discipline and defensive efficiency</strong>, while revealing <strong class="loss-red">clear opportunities in power production and first-pitch command</strong>.
@@ -459,6 +460,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const reportContent = document.getElementById('report-main-content');
     // --- END SECURITY CONFIGURATION ---
 
+    const sectionsToReveal = document.querySelectorAll('.animate-scroll-reveal');
+    let observer; // Will hold the IntersectionObserver instance
+
+    // --- INTERSECTION OBSERVER SETUP ---
+    const setupObserver = () => {
+        // Options for the observer: trigger when 15% of the element is visible
+        const options = {
+            root: null, // relative to the viewport
+            rootMargin: '0px',
+            threshold: 0.15 
+        };
+
+        // Callback function when an element intersects the viewport
+        const callback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const section = entry.target;
+                    // 1. Reveal the element
+                    section.classList.add('revealed');
+                    
+                    // 2. Start counters if the element has them
+                    if (section.getAttribute('data-has-counters') === 'true') {
+                        startCounters(section);
+                    }
+                    
+                    // 3. Stop observing once it's revealed
+                    observer.unobserve(section);
+                }
+            });
+        };
+
+        // Create and start observing elements (excluding the first section, which is revealed on PIN entry)
+        observer = new IntersectionObserver(callback, options);
+        
+        // Start observing all sections except the Executive Summary
+        // The first section is handled separately for immediate display after login
+        sectionsToReveal.forEach((section, index) => {
+            if (index > 0) {
+                observer.observe(section);
+            }
+        });
+    };
+    // --- END INTERSECTION OBSERVER SETUP ---
+
+
     // Function to handle PIN submission
     pinForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -469,13 +515,15 @@ document.addEventListener('DOMContentLoaded', () => {
             pinScreen.style.display = 'none';
             reportContent.style.display = 'block';
             
-            // Start the counters and scroll animations immediately
-            document.querySelectorAll('.animate-scroll-reveal').forEach(section => {
-                 section.classList.add('revealed');
-                 if (section.getAttribute('data-has-counters') === 'true') {
-                    startCounters(section);
-                 }
-            });
+            // 1. Reveal the Executive Summary (the first section) immediately
+            const executiveSummary = document.getElementById('executive-summary');
+            if (executiveSummary) {
+                executiveSummary.classList.add('revealed');
+                startCounters(executiveSummary);
+            }
+            
+            // 2. Set up the Intersection Observer for the remaining sections
+            setupObserver();
 
         } else {
             // PIN is incorrect: show error message
@@ -675,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- Stat Counter Animation and Scroll Reveal (Existing Logic) ---
+    // --- Stat Counter Animation (Existing Logic) ---
     const countUp = (element, targetValue, duration = 2000) => {
         const startTime = performance.now();
         const prefix = element.getAttribute('data-prefix') || '';
