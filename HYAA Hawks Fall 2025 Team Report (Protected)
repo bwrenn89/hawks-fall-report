@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYAA Hawks Fall 2025 Season Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f4;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+        .report-container {
+            width: 100%;
+            max-width: 800px; /* Standard print width */
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            line-height: 1.6;
+            /* Start hidden until PIN is entered */
+            display: none; 
+        }
+        /* Custom Colors: Black (#111111) and Orange (#FF6600) */
+        .hawk-black { color: #111111; }
+        .bg-hawk-black { background-color: #111111; }
+        .hawk-orange { color: #FF6600; }
+        .bg-hawk-orange { background-color: #FF6600; }
+        .gain-green { color: #1E885B; }
+        .loss-red { color: #D81B60; }
+
+        /* Bubble Style for Sections */
+        .section-bubble {
+            background-color: #fcfcfc;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #eeeeee;
+        }
+
+        /* Executive Summary specific bubble */
+        .executive-bubble {
+            background-color: #ededed;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* --- Animation Styles (Scroll Reveal) --- */
+        .animate-scroll-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .animate-scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Table Styling */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.5rem 0 1rem 0;
+        }
+        th, td {
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+            color: #333;
+        }
+        tr:last-child td {
+            border-bottom: 2px solid #111111;
+        }
+        .section-header {
+            border-bottom: 3px solid #FF6600;
+            padding-bottom: 0.25rem;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 95%;
+            max-width: 700px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        /* Grid specific styles for the plan */
+        .plan-header {
+            font-weight: 700;
+            color: #111111;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid #FF6600;
+        }
+        .plan-row {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e0e0e0;
+            align-items: center;
+        }
+        .plan-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        @media (min-width: 640px) {
+            .plan-grid {
+                grid-template-columns: 1.5fr 1.5fr 2fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- PIN SCREEN OVERLAY -->
+<div id="pin-screen" class="fixed inset-0 bg-gray-100 flex items-center justify-center z-[2000]">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-hawk-orange text-center">
+        <h2 class="text-2xl font-bold hawk-black mb-4">HAWKS REPORT ACCESS</h2>
+        <p class="text-sm text-gray-600 mb-6">Enter the 4-digit team access PIN to view the report.</p>
+        
+        <form id="pin-form" class="space-y-4">
+            <input 
+                type="password" 
+                id="pin-input" 
+                maxlength="4" 
+                placeholder="0000" 
+                class="w-full text-center text-3xl font-mono tracking-widest p-3 border-2 border-gray-300 rounded-lg focus:border-hawk-orange focus:ring focus:ring-hawk-orange/50 transition"
+                autocomplete="off"
+            >
+            <button 
+                type="submit" 
+                class="bg-hawk-black hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-full w-full transition duration-150 shadow-md"
+            >
+                Unlock Report
+            </button>
+            <p id="pin-error" class="text-sm loss-red h-4 mt-2"></p>
+        </form>
+    </div>
+</div>
+
+<!-- MAIN REPORT CONTAINER (Starts hidden) -->
+<div id="report-main-content" class="report-container">
+
+    <header class="text-center pb-4">
+        <h1 class="text-3xl font-extrabold hawk-black">HYAA HAWKS 11U</h1>
+        <h2 class="text-xl font-bold hawk-orange">FALL 2025 SEASON REPORT</h2>
+        <p class="text-sm text-gray-600 mt-1">Performance Analysis & Winter Development Plan</p>
+        <div class="mt-2 text-xs text-gray-500">
+            Prepared by: Coach Brett Wrenn | Date: November 15, 2025
+        </div>
+        <div class="border-t-2 border-hawk-black mt-4"></div>
+    </header>
+
+    <div class="section-bubble executive-bubble animate-scroll-reveal" data-has-counters="true">
+        <h3 class="text-xl font-bold hawk-black section-header">EXECUTIVE SUMMARY</h3>
+        <p class="text-gray-700 mt-2">
+            The Hawks 11U Fall 2025 season demonstrated <strong class="gain-green">significant improvement in plate discipline and defensive efficiency</strong>, while revealing <strong class="loss-red">clear opportunities in power production and first-pitch command</strong>.
+        </p>
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-green-50 border-l-4 border-gain-green p-3 rounded-md">
+                <p class="font-semibold gain-green">Key Gains</p>
+                <ul class="text-sm list-disc list-inside mt-1 space-y-0.5 text-gray-700">
+                    <li>Contact rate (<strong class="font-bold"><span data-count-target="+3.6" data-prefix="+" data-suffix="%">0</span></strong>)</li>
+                    <li>BB/K ratio (<strong class="font-bold"><span data-count-target="+61" data-prefix="+" data-suffix="%">0</span></strong>)</li>
+                    <li>Fielding percentage (<strong class="font-bold"><span data-count-target="+.015" data-prefix="+">0</span></strong>)</li>
+                    <li>Errors per game (<strong class="font-bold"><span data-count-target="-23" data-prefix="−" data-suffix="%">0</span></strong>)</li>
+                </ul>
+            </div>
+            <div class="bg-red-50 border-l-4 border-loss-red p-3 rounded-md">
+                <p class="font-semibold loss-red">Key Opportunities</p>
+                <ul class="text-sm list-disc list-inside mt-1 space-y-0.5 text-gray-700">
+                    <li>Slugging percentage (<strong class="font-bold"><span data-count-target="-59" data-prefix="−" data-suffix=" points">0</span></strong>)</li>
+                    <li>Home runs (<strong class="font-bold"><span data-count-target="-57" data-prefix="−" data-suffix="%">0</span></strong>)</li>
+                    <li>First-pitch strike % (<strong class="font-bold"><span data-count-target="-3.7" data-prefix="−" data-suffix="%">0</span></strong>)</li>
+                    <li>HR allowed (<strong class="font-bold"><span data-count-target="+160" data-prefix="+" data-suffix="%">0</span></strong>)</li>
+                </ul>
+            </div>
+        </div>
+        <p class="text-md font-bold text-center mt-4 p-2 bg-yellow-50 rounded-md border border-yellow-200">
+            <span class="hawk-black">Winter Priority:</span> Rebuild <strong class="hawk-orange">extra-base power</strong> and <strong class="hawk-orange">mound presence</strong> to dominate <strong class="font-bold">11U</strong> competition in Spring 2026.
+        </p>
+    </div>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">1. BATTING PERFORMANCE</h3>
+        <table class="text-sm">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>10U Spring</th>
+                    <th>11U Fall</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Batting Average</td><td>.425</td><td>.398</td><td class="loss-red">−0.027</td></tr>
+                <tr><td>On-Base Percentage</td><td>.503</td><td>.484</td><td class="loss-red">−0.019</td></tr>
+                <tr><td><strong>Slugging %</strong></td><td>.600</td><td>.541</td><td class="loss-red"><strong>−0.059</strong></td></tr>
+                <tr><td><strong>OPS</strong></td><td>1.103</td><td>1.026</td><td class="loss-red">−0.077</td></tr>
+                <tr><td>Home Runs</td><td>7</td><td>3</td><td class="loss-red">−57%</td></tr>
+                <tr><td><strong>BB/K Ratio</strong></td><td>0.98</td><td>1.58</td><td class="gain-green"><strong>+61%</strong></td></tr>
+                <tr><td><strong>Contact Rate</strong></td><td>86.5%</td><td>90.1%</td><td class="gain-green"><strong>+3.6%</strong></td></tr>
+                <tr><td>BA with RISP</td><td>.410</td><td>.406</td><td class="loss-red">−0.004</td></tr>
+                <tr><td>Quality At-Bats %</td><td>48.1%</td><td>47.1%</td><td class="loss-red">−1.0%</td></tr>
+            </tbody>
+        </table>
+
+        <p class="text-xs font-semibold hawk-black mt-1">Analysis:</p>
+        <ul class="text-xs list-disc list-inside text-gray-700 pl-4 space-y-0.5">
+            <li><strong>Discipline & Contact</strong>: The team achieved its highest contact rate and walk-to-strikeout ratio in program history, reflecting improved pitch recognition and two-strike approach.</li>
+            <li><strong>Power Regression</strong>: Despite 71 additional at-bats, extra-base hits remained flat and home runs declined sharply, indicating a need for mechanical adjustments against elevated velocity and breaking pitches.</li>
+        </ul>
+
+        <p class="text-xs font-semibold hawk-black mt-3">Development Focus:</p>
+        <ul class="text-xs list-decimal list-inside text-gray-700 pl-4 space-y-0.5">
+            <li>Launch angle optimization (10–15°) via tee and front-toss progression</li>
+            <li>Velocity exposure: 60–65 mph machine work to simulate 11U+ arms</li>
+            <li>Two-strike approach refinement to maintain QAB% above 50%</li>
+        </ul>
+    </section>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">2. PITCHING PERFORMANCE</h3>
+        <table class="text-sm">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>10U Spring</th>
+                    <th>11U Fall</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>ERA</strong></td><td>6.18</td><td>5.60</td><td class="gain-green"><strong>−0.58</strong></td></tr>
+                <tr><td><strong>WHIP</strong></td><td>2.20</td><td>2.12</td><td class="gain-green">−0.08</td></tr>
+                <tr><td>Strikeouts per BF</td><td>15.4%</td><td>17.4%</td><td class="gain-green"><strong>+2.0%</strong></td></tr>
+                <tr><td>Walks per Inning</td><td>0.75</td><td>0.68</td><td class="gain-green">−9%</td></tr>
+                <tr><td><strong>First-Pitch Strike %</strong></td><td>61.3%</td><td>57.6%</td><td class="loss-red"><strong>−3.7%</strong></td></tr>
+                <tr><td>Home Runs Allowed</td><td>5</td><td>13</td><td class="loss-red"><strong>+160%</strong></td></tr>
+                <tr><td>Innings Pitched</td><td>119.1</td><td>140.1</td><td class="gain-green">+21.0</td></tr>
+            </tbody>
+        </table>
+
+        <p class="text-xs font-semibold hawk-black mt-1">Analysis:</p>
+        <ul class="text-xs list-disc list-inside text-gray-700 pl-4 space-y-0.5">
+            <li><strong>Command & Volume</strong>: ERA, WHIP, and walk rate all improved despite a 17% increase in innings pitched.</li>
+            <li><strong>Efficiency Decline</strong>: Reduced first-pitch strike percentage led to deeper counts and elevated mistake pitches, resulting in a 160% increase in home runs allowed.</li>
+        </ul>
+
+        <p class="text-xs font-semibold hawk-black mt-3">Development Focus:</p>
+        <ul class="text-xs list-decimal list-inside text-gray-700 pl-4 space-y-0.5">
+            <li>First-pitch strike command drills (corner targeting) → Target: <strong class="hawk-orange">>62% FPS</strong></li>
+            <li>Fastball elevation and spin efficiency → <strong class="hawk-orange">HR/9 < 0.6</strong></li>
+            <li>Change-up integration → Minimum <strong class="hawk-orange">15% of total pitches</strong></li>
+        </ul>
+    </section>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">3. DEFENSIVE PERFORMANCE</h3>
+        <table class="text-sm">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>10U Spring</th>
+                    <th>11U Fall</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Fielding %</strong></td><td>.910</td><td>.925</td><td class="gain-green"><strong>+.015</strong></td></tr>
+                <tr><td>Errors per Game</td><td>2.17</td><td>1.66</td><td class="gain-green"><strong>−23%</strong></td></tr>
+                <tr><td>Double Plays Turned</td><td>11</td><td>9</td><td class="loss-red">−2</td></tr>
+                <tr><td>Catcher CS %</td><td>6.9%</td><td>8.5%</td><td class="gain-green"><strong>+23%</strong></td></tr>
+            </tbody>
+        </table>
+
+        <p class="text-xs font-semibold hawk-black mt-1">Analysis:</p>
+        <ul class="text-xs list-disc list-inside text-gray-700 pl-4 space-y-0.5">
+            <li><strong>Efficiency Gains</strong>: Fielding percentage and error rate represent the strongest defensive season in team history.</li>
+            <li><strong>Execution Gap</strong>: Double play execution declined despite increased opportunity, suggesting a need for middle-infield synchronization.</li>
+        </ul>
+
+        <p class="text-xs font-semibold hawk-black mt-3">Development Focus:</p>
+        <ul class="text-xs list-decimal list-inside text-gray-700 pl-4 space-y-0.5">
+            <li>Middle-infield double play feeds → <strong class="hawk-orange">200 reps per practice</strong></li>
+            <li>Outfield arm strength and accuracy → Long-toss and crow-hop progression</li>
+        </ul>
+    </section>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">4. BASE RUNNING</h3>
+        <table class="text-sm">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>10U Spring</th>
+                    <th>11U Fall</th>
+                    <th>Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Stolen Bases</td><td>164</td><td>185</td><td class="gain-green"><strong>+21</strong></td></tr>
+                <tr><td>Stolen Base %</td><td>97.0%</td><td>96.4%</td><td class="loss-red">−0.6%</td></tr>
+            </tbody>
+        </table>
+        <p class="text-xs font-semibold hawk-black mt-1">Analysis:</p>
+        <ul class="text-xs list-disc list-inside text-gray-700 pl-4 space-y-0.5">
+            <li><strong>Aggressiveness</strong>: The Hawks led the league in stolen bases and attempts.</li>
+            <li><strong>Efficiency</strong>: A slight decline in success rate indicates opportunities in jump timing and secondary lead execution.</li>
+        </ul>
+        <p class="text-xs font-semibold hawk-black mt-3">Development Focus:</p>
+        <ul class="text-xs list-decimal list-inside text-gray-700 pl-4 space-y-0.5">
+            <li>Secondary lead and first-step explosion drills</li>
+            <li>Situational advancement tracking (1st to 3rd, tag-up reads)</li>
+        </ul>
+    </section>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">5. INDIVIDUAL PLAYER DEVELOPMENT</h3>
+        <p class="text-gray-700 mt-2 text-sm">
+            Click on a player below to view their <strong>Personalized Winter Development Plan</strong>, focusing on 3 targeted, measurable priorities.
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-2 justify-center">
+            <button data-player-id="23_Griffin_SH" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #23 Griffin S-H
+            </button>
+            <button data-player-id="07_Harrison_E" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #07 Harrison E
+            </button>
+            <button data-player-id="20_Blake_W" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #20 Blake W
+            </button>
+            <button data-player-id="03_Maverick_S" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #03 Maverick S
+            </button>
+            <button data-player-id="09_Sael_D" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #09 Sael D
+            </button>
+            <button data-player-id="11_Crew_G" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #11 Crew G
+            </button>
+            <button data-player-id="38_Griffin_E" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #38 Griffin E
+            </button>
+            <button data-player-id="88_Will_M" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #88 Will M
+            </button>
+            <button data-player-id="17_Harvey_M" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #17 Harvey M
+            </button>
+            <button data-player-id="21_Jordan_M" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #21 Jordan M
+            </button>
+            <button data-player-id="54_Braxton_M" class="player-plan-btn bg-hawk-orange hover:bg-hawk-black text-white font-semibold py-2 px-3 rounded-full shadow-lg transition duration-200 text-sm">
+                #54 Braxton M
+            </button>
+        </div>
+    </section>
+
+    <section class="section-bubble animate-scroll-reveal">
+        <h3 class="text-xl font-bold hawk-black section-header">6. WINTER TRAINING PRIORITY MATRIX (TEAM)</h3>
+        <table class="text-sm">
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Focus Area</th>
+                    <th>Target Metric</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Power Hitting Development</td><td>SLG > .600</td></tr>
+                <tr><td>2</td><td>First-Pitch Strike Command</td><td>FPS% > 62%</td></tr>
+                <tr><td>3</td><td>Change-Up Integration</td><td>15% of total pitches</td></tr>
+                <tr><td>4</td><td>Middle Infield Execution</td><td>15 double plays (Spring)</td></tr>
+                <tr><td>5</td><td>Base Running Efficiency</td><td>SB% ≥ 97%</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer class="mt-6 pt-3 border-t-2 border-hawk-black text-center">
+        <p class="text-sm font-bold hawk-black">Conclusion</p>
+        <p class="text-xs text-gray-700 mt-1">
+            The 11U Fall season established a foundation of <strong>discipline, contact, and defense</strong>. The transition to <strong class="font-bold">11U</strong> requires <strong>targeted power development and mound efficiency</strong> to sustain competitive dominance. This report serves as the roadmap. Execution begins now.
+        </p>
+        <p class="text-xs mt-2 italic text-gray-500">
+            HYAA Hawks Baseball | Est. 1976 | Compete. Develop. Win.
+        </p>
+    </footer>
+</div>
+
+
+<div id="player-plan-modal-overlay" class="modal-overlay">
+    <div id="player-plan-modal-content" class="modal-content">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <div>
+                <h4 id="modal-player-name" class="text-2xl font-extrabold hawk-orange"></h4>
+                <p id="modal-player-focus" class="text-sm italic text-gray-600 mt-1"></p>
+            </div>
+            <button id="close-modal-btn" class="text-gray-500 hover:text-hawk-black text-2xl font-light leading-none">×</button>
+        </div>
+        
+        <p class="text-xs text-gray-500 mb-4"><span class="font-semibold">Goal:</span> Turn Fall data into Spring 2026 breakout performances.</p>
+
+        <div class="plan-grid plan-header text-sm">
+            <div>Area</div>
+            <div class="hidden sm:block">Fall Stat</div>
+            <div class="hidden sm:block">Winter Focus</div>
+        </div>
+
+        <div id="modal-plan-list">
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- SECURITY CONFIGURATION ---
+    const CORRECT_PIN = "9790"; // <<< PIN has been changed to 9790! >>>
+    const pinForm = document.getElementById('pin-form');
+    const pinInput = document.getElementById('pin-input');
+    const pinError = document.getElementById('pin-error');
+    const pinScreen = document.getElementById('pin-screen');
+    const reportContent = document.getElementById('report-main-content');
+    // --- END SECURITY CONFIGURATION ---
+
+    // Function to handle PIN submission
+    pinForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const enteredPin = pinInput.value.trim();
+
+        if (enteredPin === CORRECT_PIN) {
+            // PIN is correct: hide the screen and show the report
+            pinScreen.style.display = 'none';
+            reportContent.style.display = 'block';
+            
+            // Start the counters and scroll animations immediately
+            document.querySelectorAll('.animate-scroll-reveal').forEach(section => {
+                 section.classList.add('revealed');
+                 if (section.getAttribute('data-has-counters') === 'true') {
+                    startCounters(section);
+                 }
+            });
+
+        } else {
+            // PIN is incorrect: show error message
+            pinError.textContent = "Incorrect PIN. Please try again.";
+            pinInput.value = '';
+            pinInput.focus();
+        }
+    });
+
+
+    // --- FULL PLAYER DATA (UNCHANGED) ---
+    const playerDevelopmentPlans = {
+        '23_Griffin_SH': {
+            name: '#23 Griffin S-H',
+            focus: 'Fall MVP, Table-Setter',
+            priorities: [
+                { area: 'Hitting', fallStat: '.500 AVG, .563 OBP, 56.3% QAB', winterFocus: 'Add gap power – 10° launch tee, front-toss at 65 mph → Target: 15 XBH in Spring' },
+                { area: 'Discipline', fallStat: '96% contact, 12 BB', winterFocus: 'Hunt early mistakes – 0–0 & 1–0 approach drills → Raise SLG to .750+' },
+                { area: 'Running', fallStat: '31 SB (94% success)', winterFocus: '1st-to-3rd aggression – tag & go reads → 80% advance rate' }
+            ]
+        },
+        '07_Harrison_E': {
+            name: '#07 Harrison E',
+            focus: 'Two-Way Beast',
+            priorities: [
+                { area: 'Hitting', fallStat: '.466 AVG, 1.322 OPS, 16 XBH', winterFocus: 'Barrel consistency – heavy bag, med ball slams → SLG > .900' },
+                { area: 'Pitching', fallStat: '19 IP, 4.42 ERA, 21 K', winterFocus: 'First-pitch strike – 50-pitch corner bullpens → FPS% > 65%' },
+                { area: 'Fielding', fallStat: '.941 FPCT, 3 DP', winterFocus: 'Middle IF sync – 200 DP feeds → Lead team in DP turned' }
+            ]
+        },
+        '20_Blake_W': {
+            name: '#20 Blake W',
+            focus: 'Fall Ace',
+            priorities: [
+                { area: 'Pitching', fallStat: '27 IP, 2.44 ERA, 1.33 WHIP', winterFocus: 'Elevate FB – high-tee finish drills → HR/9 < 0.3' },
+                { area: 'Command', fallStat: '69.6% FPS, 6 BB', winterFocus: 'Change-up grip & feel – 100 CH/day → 15% of pitches' },
+                { area: 'Hitting', fallStat: '.415 AVG, .965 OPS', winterFocus: 'Protect SLG – pull-side power tee → Maintain .500+ SLG' }
+            ]
+        },
+        '03_Maverick_S': {
+            name: '#03 Maverick S',
+            focus: 'Strikeout Machine',
+            priorities: [
+                { area: 'Pitching', fallStat: '22 IP, 23 K, 21.3% K/BF', winterFocus: 'Spin efficiency – weighted ball velocity program → +2 mph FB' },
+                { area: 'Command', fallStat: '1.82 WHIP, 19 BB', winterFocus: 'Locate off-speed – shadow + mirror drills → BB/9 < 2.5' },
+                { area: 'Hitting', fallStat: '.347 AVG, 15 XBH', winterFocus: 'Two-strike approach – soft toss survival → QAB% > 55%' }
+            ]
+        },
+        '09_Sael_D': {
+            name: '#09 Sael D',
+            focus: 'OBP Wizard',
+            priorities: [
+                { area: 'Hitting', fallStat: '.441 AVG, .548 OBP', winterFocus: 'Drive the gap – opposite-field power tee → 8+ XBH' },
+                { area: 'Discipline', fallStat: '16 BB, 94.1% contact', winterFocus: 'Hunt 0–0 fastballs – timing drills → Raise OPS to 1.100+' },
+                { area: 'Fielding', fallStat: '.867 FPCT, 10 E', winterFocus: 'Footwork & glove – funnel drills → FPCT > .920' }
+            ]
+        },
+        '11_Crew_G': {
+            name: '#11 Crew G',
+            focus: 'Catcher / Speed Threat',
+            priorities: [
+                { area: 'Receiving', fallStat: '77.2 INN, 5 CS (5.8%)', winterFocus: 'Blocking & framing – tennis ball wall drills → CS% > 15%' },
+                { area: 'Hitting', fallStat: '.431 AVG, .960 OPS', winterFocus: 'Pull-side power – rotational med ball throws → SLG > .550' },
+                { area: 'Running', fallStat: '13 SB (93%)', winterFocus: 'Secondary leads – reaction starts → 1st-to-3rd > 75%' }
+            ]
+        },
+        '38_Griffin_E': {
+            name: '#38 Griffin E',
+            focus: 'Contact + Speed',
+            priorities: [
+                { area: 'Hitting', fallStat: '.443 AVG, 48.5% QAB', winterFocus: 'Add loft – high tee, flip drills → SLG > .650' },
+                { area: 'Pitching', fallStat: '12.2 IP, 7.58 ERA', winterFocus: 'FB command – zone targeting → WHIP < 2.00' },
+                { area: 'Running', fallStat: '28 SB (100%)', winterFocus: 'Steal 3B – delayed steal reads → 5+ 3B steals' }
+            ]
+        },
+        '88_Will_M': {
+            name: '#88 Will M',
+            focus: 'Power Corner',
+            priorities: [
+                { area: 'Hitting', fallStat: '.400 AVG, 10 XBH, 1 HR', winterFocus: 'Launch consistency – overload/underload bats → 3+ HR' },
+                { area: 'Discipline', fallStat: '60.7% QAB', winterFocus: 'Two-strike survival – machine survival mode → Contact% > 90%' },
+                { area: 'Fielding', fallStat: '.800 FPCT', winterFocus: '1B reactions – short-hop drills → FPCT > .950' }
+            ]
+        },
+        '17_Harvey_M': {
+            name: '#17 Harvey M',
+            focus: 'Catcher / Grinder',
+            priorities: [
+                { area: 'Receiving', fallStat: '35.2 INN, 5 CS (13.9%)', winterFocus: 'Arm strength – long-toss to 2B → Pop time < 2.00' },
+                { area: 'Hitting', fallStat: '.386 AVG, .962 OPS', winterFocus: 'Drive middle – inside-out swing path → OPS > 1.000' },
+                { area: 'Discipline', fallStat: '37.5% QAB', winterFocus: 'Deep counts – 6+ pitch AB drills → QAB% > 50%' }
+            ]
+        },
+        '21_Jordan_M': {
+            name: '#21 Jordan M',
+            focus: 'Utility Arm & OBP',
+            priorities: [
+                { area: 'Pitching', fallStat: '18 IP, 4.00 ERA', winterFocus: 'Off-speed command – CH/CB location → WHIP < 1.60' },
+                { area: 'Hitting', fallStat: '.333 AVG, .537 OBP', winterFocus: 'Barrel up – top-hand drills → SLG > .600' },
+                { area: 'Fielding', fallStat: '.872 FPCT', winterFocus: 'Infield range – lateral quickness → +3 PO' }
+            ]
+        },
+        '54_Braxton_M': {
+            name: '#54 Braxton M',
+            focus: 'Contact & Speed',
+            priorities: [
+                { area: 'Hitting', fallStat: '.228 AVG, 84.2% contact', winterFocus: 'Line drive swing – level path tee → AVG > .300' },
+                { area: 'Pitching', fallStat: '11 IP, 9.27 ERA', winterFocus: 'FB location – down-zone drills → ERA < 6.00' },
+                { area: 'Running', fallStat: '10 SB (100%)', winterFocus: 'First-step explosion – resistance bands → SB > 15' }
+            ]
+        }
+    };
+
+
+    // --- MODAL LOGIC (UNCHANGED) ---
+    const modalOverlay = document.getElementById('player-plan-modal-overlay');
+    const closeBtn = document.getElementById('close-modal-btn');
+    const planListContainer = document.getElementById('modal-plan-list');
+    const playerName = document.getElementById('modal-player-name');
+    const playerFocus = document.getElementById('modal-player-focus');
+    const playerButtons = document.querySelectorAll('.player-plan-btn');
+
+    // Function to close the modal
+    const closeModal = () => {
+        modalOverlay.classList.remove('active');
+    };
+
+    // Function to open the modal and populate the structured plan
+    const openModal = (playerId) => {
+        const plan = playerDevelopmentPlans[playerId];
+        if (!plan) return;
+
+        // Populate modal headers
+        playerName.textContent = plan.name;
+        playerFocus.textContent = plan.focus;
+        
+        // Populate the development steps (structured grid)
+        planListContainer.innerHTML = ''; // Clear previous items
+
+        plan.priorities.forEach(p => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'plan-grid plan-row text-sm';
+            
+            // CORE CHANGE: SPLIT FOCUS AND GOAL
+            const parts = p.winterFocus.split('→');
+            const action = parts[0].trim();
+            
+            let goalHtml = '';
+            if (parts.length > 1) {
+                goalHtml = `<div class="mt-1 text-xs text-gray-700">
+                                <span class="font-semibold">Goal:</span> ${parts[1].trim()}
+                            </div>`;
+            }
+            
+            // Area (Bold and Hawk Black)
+            rowDiv.innerHTML += `<div class="font-bold text-hawk-black">${p.area}</div>`;
+
+            // Fall Stat (Text Gray, hidden on small mobile to prioritize focus)
+            rowDiv.innerHTML += `<div class="text-gray-600 hidden sm:block">${p.fallStat}</div>`;
+            
+            // Winter Focus Column: Now displays Action first (in orange), then Goal (in gray)
+            rowDiv.innerHTML += `<div class="text-hawk-orange">
+                                     <div class="font-medium">${action}</div>
+                                     ${goalHtml}
+                                 </div>`;
+
+            // On mobile, show the Fall Stat under the Area (breaks the grid structure for max readability)
+            rowDiv.innerHTML += `<div class="text-xs text-gray-500 sm:hidden -mt-1 mb-1">${p.fallStat}</div>`;
+
+            planListContainer.appendChild(rowDiv);
+        });
+
+        // Show modal
+        modalOverlay.classList.add('active');
+    };
+
+    // Event Listeners for buttons
+    playerButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            const playerId = event.currentTarget.getAttribute('data-player-id');
+            openModal(playerId);
+        });
+    });
+
+    // Close listeners
+    closeBtn.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (event) => {
+        if (event.target === modalOverlay) {
+            closeModal();
+        }
+    });
+    // Add escape key closing
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modalOverlay.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+
+    // --- Stat Counter Animation and Scroll Reveal (Existing Logic) ---
+    const countUp = (element, targetValue, duration = 2000) => {
+        const startTime = performance.now();
+        const prefix = element.getAttribute('data-prefix') || '';
+        const suffix = element.getAttribute('data-suffix') || '';
+        const isNegative = targetValue < 0;
+        let target = Math.abs(targetValue);
+        let decimalPlaces = 0;
+
+        if (target.toString().includes('.')) {
+            const parts = target.toString().split('.');
+            if (parts.length > 1) {
+                decimalPlaces = parts[1].length;
+            }
+        }
+        
+        element.textContent = prefix + (0).toFixed(decimalPlaces) + suffix;
+
+        const updateCount = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            let currentValue = progress * target;
+
+            let displayPrefix = prefix;
+
+            if (isNegative) {
+                if (prefix === '−') {
+                    // Use unicode prefix, keep currentValue positive for display
+                } else {
+                    displayPrefix = '-';
+                }
+                currentValue = Math.abs(currentValue);
+            }
+
+            let displayValue = currentValue.toFixed(decimalPlaces);
+
+            if (progress === 1) {
+                displayValue = Math.abs(targetValue).toFixed(decimalPlaces);
+            }
+
+            element.textContent = displayPrefix + displayValue + suffix;
+
+            if (progress < 1) {
+                requestAnimationFrame(updateCount);
+            }
+        };
+
+        requestAnimationFrame(updateCount);
+    };
+
+    const startCounters = (container) => {
+        container.querySelectorAll('[data-count-target]').forEach(el => {
+            const target = parseFloat(el.getAttribute('data-count-target'));
+            
+            const decimalCount = el.getAttribute('data-count-target').toString().split('.')[1]?.length || 0;
+            if (el.textContent === el.getAttribute('data-prefix') + Math.abs(target).toFixed(decimalCount) + el.getAttribute('data-suffix')) {
+                 return;
+            }
+
+            countUp(el, target); 
+        });
+    };
+});
+</script>
+
+</body>
+</html>
